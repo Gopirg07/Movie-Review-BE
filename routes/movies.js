@@ -26,4 +26,16 @@ router.get("/", async function (req, res, next) {
   }
 });
 
+//DELETE A Movie Review
+router.delete("/deleteMovieReview",async function(req,res){
+  try {
+    let data=await MovieModel.deleteOne({_id:req.body.id})
+    res.status(200).send({message:`${data.name}'s Review Deleted Successfully`,data});
+  } catch (error) {
+    res.status(500).send({ message: "Internal Server Error", error });
+  }
+})
+
+
+
 module.exports = router;
