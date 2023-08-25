@@ -26,10 +26,22 @@ router.get("/", async function (req, res, next) {
   }
 });
 
-//DELETE A Movie Review
-router.delete("/deleteMovieReview",async function(req,res){
+// GET By ID 
+router.get("/getMovieReview/:id", async function (req, res, next) {
   try {
-    let data=await MovieModel.deleteOne({_id:req.body.id})
+    let data= await MovieModel.find({_id:req.params.id})
+    console.log(data);
+    res.status(200).send({message:"Movie Review's Data Fetched Successfully",data}) 
+  } catch (error) {
+    res.status(500).send({ message: "Internal Server Error", error });
+  }
+});
+
+//DELETE A Movie Review
+router.delete("/deleteMovieReview/:id",async function(req,res){
+  try {
+    let data=await MovieModel.deleteOne({_id:req.params.id})
+    console.log(req.params.id)
     res.status(200).send({message: "A Movie Review Deleted Successfully", data});
   } catch (error) {
     res.status(500).send({ message: "Internal Server Error", error });
