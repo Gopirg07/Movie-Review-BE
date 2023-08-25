@@ -37,6 +37,18 @@ router.get("/getMovieReview/:id", async function (req, res, next) {
   }
 });
 
+// PUT Update A Movie Review 
+router.put("/updateMovieReview/:id", async function (req, res, next) {
+  try {
+    let data= await MovieModel.findOneAndUpdate({_id:req.params.id},req.body)      
+    console.log(data);
+    res.status(200).send({message:"Movie Review's Data Fetched Successfully",data}) 
+  } catch (error) {
+    res.status(500).send({ message: "Internal Server Error", error });
+  }
+});
+
+
 //DELETE A Movie Review
 router.delete("/deleteMovieReview/:id",async function(req,res){
   try {
