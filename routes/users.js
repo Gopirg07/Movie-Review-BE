@@ -98,7 +98,7 @@ router.post("/forgetPassword", async (req, res) => {
       let token = await createForgetToken({ id: user._id });
 
       //send mail  
-      const url = `https://gcrm-frontend.netlify.app/reset-password/${token}`; 
+      const url = `https://moviesreviewsapp.netlify.app/reset-password/${token}`; 
       const name = user.name;
       const email = user.email;
       SendResetEmail(email, url, "Reset Your Password", name);
