@@ -71,7 +71,7 @@ router.post("/signUpActivation", async (req, res, next) => {
     );
     res.status(200).send({ message: "Email Successfully Verified !!!", data });
   } catch (error) {
-    res.status(500).send({ message: "Internal Server Error", error });
+    res.status(500).send({ message: "Internal Server Errrr", error });
   }
 });
 
