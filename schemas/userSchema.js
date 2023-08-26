@@ -11,8 +11,8 @@ let UserSchema = new mongoose.Schema(
         return validator.isEmail(val);
       },
     },
-    password: { type: String, required: true },
-    phone: { type: String, default: "0000-00-0000" },
+    password: { type: String, required: true }, 
+    activation: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now() },
   },
   {

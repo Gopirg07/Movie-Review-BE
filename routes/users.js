@@ -38,7 +38,19 @@ router.post("/signUp", async (req, res, next) => {
       let hashedPassword = await hashPassword(req.body.password);
       req.body.password = hashedPassword;
       let user = await UserModel.create(req.body);
-      res.status(200).send({ message: "User Signup Successfull !!!", user });
+
+      let token = await createForgetToken({
+        name: user.name,
+        email: user.email,
+      });
+
+      //send mail
+      const url = `https://moviesreviewsapp.netlify.app/signUpActivation/${token}`;
+      const name = user.name;
+      const email = user.email;
+      SendResetEmail(email, url, "Activate Your Account", name);
+
+      res.status(200).send({ message: "User Signup Successfull !!!",user,token });
     } else {
       res.status(400).send({ message: "User Already Exists" });
     }
@@ -47,24 +59,58 @@ router.post("/signUp", async (req, res, next) => {
   }
 });
 
+//SignUpActivation
+router.post("/signUpActivation", async (req, res, next) => {
+  try {
+    let tokenn = await jwt.decode(req.body.token);
+    req.body.token = tokenn.email;
+
+    let data = await UserModel.findOneAndUpdate(
+      { email: req.body.token },
+      { activation: true }
+    );
+    res.status(200).send({ message: "Email Successfully Verified !!!", data });
+  } catch (error) {
+    res.status(500).send({ message: "Internal Server Errors", error });
+  }
+});
+
 //Login
 router.post("/signIn", async (req, res, next) => {
   try {
     let user = await UserModel.findOne({ email: req.body.email });
     if (user) {
-      if (await comparePassword(req.body.password, user.password)) {
-        let token = await createToken({
-          name: user.name,
-          role: user.role,
-          id: user._id,
-          role: user.role,
-        });
-        let role = user.role;
+      if (user.activation === true) {
+        if (await comparePassword(req.body.password, user.password)) {
+          let token = await createToken({
+            name: user.name,
+            role: user.role,
+            id: user._id,
+            email: user.email,
+          });
+          let role = user.role;
         res
           .status(200)
-          .send({ message: "User Login Successfull !!!", token, role });
+          .send({ message: "User Login Successfull !!!", token, role }); 
+        } else {
+          res.status(402).send({ message: "Invalid Password" });
+        }
       } else {
-        res.status(402).send({ message: "Invalid Password" });
+        let token = await createForgetToken({
+          name: user.name,
+          email: user.email,
+        }); 
+        //send mail
+        const url = `https://moviesreviewsapp.netlify.app/signUpActivation/${token}`;
+        const name = user.name;
+        const email = user.email;
+        SendResetEmail(email, url, "Activate Your Account", name);
+
+        res.status(402).send({
+          message:
+            "Please Activate Your Account, An Email Already Sent To Your Mail Id.",
+          token,
+        });
       }
     } else {
       res.status(403).send({ message: "User Doesn't Exists" });
@@ -97,8 +143,8 @@ router.post("/forgetPassword", async (req, res) => {
       //create token
       let token = await createForgetToken({ id: user._id });
 
-      //send mail  
-      const url = `https://moviesreviewsapp.netlify.app/reset-password/${token}`; 
+      //send mail
+      const url = `https://moviesreviewsapp.netlify.app/reset-password/${token}`;
       const name = user.name;
       const email = user.email;
       SendResetEmail(email, url, "Reset Your Password", name);
@@ -118,31 +164,26 @@ router.post("/forgetPassword", async (req, res) => {
 //Reset Password
 router.post("/resetPassword", async (req, res) => {
   try {
-    if (req.headers.authorization) 
-    {
+    if (req.headers.authorization) {
       let token = req.headers.authorization.split(" ")[1];
       let data = await jwt.decode(token);
       let currentTime = Math.floor(+new Date() / 1000);
-      if (currentTime < data.exp) 
-      {
-        let hashedPassword = await hashPassword(req.body.password); 
-        let user=data
+      if (currentTime < data.exp) {
+        let hashedPassword = await hashPassword(req.body.password);
+        let user = data;
 
-        let updatedData=await UserModel.findOneAndUpdate({_id:user.id},{password:hashedPassword}) 
-        res.status(200).send({ message: "Password Changed Successfully !!!"});
-      } 
-      else 
-      {
+        let updatedData = await UserModel.findOneAndUpdate(
+          { _id: user.id },
+          { password: hashedPassword }
+        );
+        res.status(200).send({ message: "Password Changed Successfully !!!" });
+      } else {
         res.status(401).send({ message: "Token Expired Try Again" });
-      } 
-    } 
-    else 
-    {
+      }
+    } else {
       res.status(401).send({ message: "Token Not Found" });
     }
-  } 
-  catch (error) 
-  {
+  } catch (error) {
     res.status(500).send({ message: "Internal Server Error", error });
   }
 });
