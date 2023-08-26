@@ -16,7 +16,7 @@ const comparePassword = async (hashPassword, password) => {
 };
 
 const createToken = async (payload) => {
-  let token = await jwt.sign(payload, secretKey, { expiresIn: "2m" });
+  let token = await jwt.sign(payload, secretKey, { expiresIn: "5m" });
   return token;
 };
 
